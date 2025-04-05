@@ -2,9 +2,9 @@ import PokemonTCG from "./pokemon-tcg.ts";
 
 const apiKey = await readTextFileIfExists("./apikey.txt");
 const pokemonTCG = new PokemonTCG(apiKey);
-const sviSet = await pokemonTCG.getSet("sv1");
+const sets = await pokemonTCG.searchSets({ query: "ptcgoCode:SVI" });
 
-console.log(JSON.stringify(sviSet, null, 2));
+console.log(JSON.stringify(sets, null, 2));
 
 async function readTextFileIfExists(filePath: string): Promise<string | null> {
     try {
