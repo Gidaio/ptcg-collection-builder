@@ -2,7 +2,7 @@ import PokemonTCG from "./pokemon-tcg.ts";
 
 const apiKey = await readTextFileIfExists("./apikey.txt");
 const pokemonTCG = new PokemonTCG(apiKey);
-const sets = await pokemonTCG.searchSets({ query: "ptcgoCode:SVI" });
+const sets = await pokemonTCG.searchCards({ query: "set.id:sv1" });
 
 console.log(JSON.stringify(sets, null, 2));
 

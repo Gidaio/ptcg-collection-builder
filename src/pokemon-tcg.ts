@@ -21,7 +21,6 @@ interface ErrorResponse {
 
 interface SearchInput {
     query: string;
-    page?: number;
     pageSize?: number;
 }
 
@@ -125,13 +124,8 @@ export default class PokemonTCG {
     private async searchResource(resourceName: "cards", searchInput: SearchInput): Promise<Card[]>;
     private async searchResource<R>(
         resourceName: "sets" | "cards",
-        { query, page = 1, pageSize = 250 }: SearchInput,
+        { query, pageSize = 250 }: SearchInput,
     ): Promise<R[]> {
-        const searchParams = new URLSearchParams();
-        searchParams.set("q", query);
-        searchParams.set("page", page.toString(10));
-        searchParams.set("pageSize", pageSize.toString(10));
-
         const headers = new Headers({
             accept: "application/json",
         });
@@ -140,18 +134,32 @@ export default class PokemonTCG {
             headers.set("X-Api-Key", this.apiKey);
         }
 
-        const response = await this.commonFetch(
-            `https://api.pokemontcg.io/v2/${resourceName}?${searchParams.toString()}`,
-            { headers },
-        );
+        const resources: R[] = [];
+        let currentPage = 1;
+        let total = 0;
 
-        if (response.status === 404) {
-            return [];
-        }
+        do {
+            const searchParams = new URLSearchParams();
+            searchParams.set("q", query);
+            searchParams.set("page", currentPage.toString(10));
+            searchParams.set("pageSize", pageSize.toString(10));
 
-        const responseBody = await response.json() as SuccessListResponse<R>;
+            const response = await this.commonFetch(
+                `https://api.pokemontcg.io/v2/${resourceName}?${searchParams.toString()}`,
+                { headers },
+            );
 
-        return responseBody.data;
+            if (response.status === 404) {
+                break;
+            }
+
+            const responseBody = await response.json() as SuccessListResponse<R>;
+
+            resources.push(...responseBody.data);
+            total = responseBody.totalCount;
+        } while (currentPage++ * pageSize < total);
+
+        return resources;
     }
 
     private async commonFetch(
