@@ -2,7 +2,7 @@ interface Card {
     id: string;
     name: string;
     set: Set;
-    number: number;
+    number: string;
     rarity: string;
     images: CardImages;
 }

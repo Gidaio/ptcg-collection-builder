@@ -4,6 +4,6 @@
         "lineWidth": 100
     },
     "tasks": {
-        "start": "deno run --allow-read=apikey.txt --allow-net=api.pokemontcg.io src/main.ts"
+        "start": "deno run --allow-read=apikey.txt,cache --allow-write=cache --allow-net=api.pokemontcg.io src/main.ts"
     }
 }

@@ -1,19 +1,5 @@
-import PokemonTCG from "./pokemon-tcg.ts";
+import { getSetCards } from "./set-cache.ts";
 
-const apiKey = await readTextFileIfExists("./apikey.txt");
-const pokemonTCG = new PokemonTCG(apiKey);
-const sets = await pokemonTCG.searchCards({ query: "set.id:sv1" });
+const cards = await getSetCards("SVI");
 
-console.log(JSON.stringify(sets, null, 2));
-
-async function readTextFileIfExists(filePath: string): Promise<string | null> {
-    try {
-        return await Deno.readTextFile(filePath);
-    } catch (error) {
-        if (error instanceof Deno.errors.NotFound) {
-            return null;
-        } else {
-            throw error;
-        }
-    }
-}
+console.log(JSON.stringify(cards, null, 2));
