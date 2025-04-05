@@ -1,7 +1,7 @@
 import PokemonTCG from "./pokemon-tcg.ts";
 import { readTextFileIfExists } from "./util.ts";
 
-interface Card {
+export interface Card {
     number: number;
     name: string;
     rarity: Rarity;
