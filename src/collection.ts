@@ -1,6 +1,6 @@
 import { Card } from "./set-cache.ts";
 
-export type Collection = Record<number, number>;
+export type Collection = Record<Card["id"], number>;
 
 interface Rates {
     doubleRare: number;
@@ -53,10 +53,10 @@ export function addBoosterToCollection(
     }
 
     booster.forEach((card) => {
-        if (!(card.number in collection)) {
-            collection[card.number] = 1;
+        if (!(card.id in collection)) {
+            collection[card.id] = 1;
         } else {
-            collection[card.number] += 1;
+            collection[card.id] += 1;
         }
     });
 }

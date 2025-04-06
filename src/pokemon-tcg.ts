@@ -165,8 +165,6 @@ export default class PokemonTCG {
     private async commonFetch(
         ...args: Parameters<typeof fetch>
     ): ReturnType<typeof fetch> {
-        console.log(JSON.stringify(args));
-
         const response = await fetch(...args);
 
         if (response.status === 429) {

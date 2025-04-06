@@ -2,6 +2,8 @@ import PokemonTCG from "./pokemon-tcg.ts";
 import { readTextFileIfExists } from "./util.ts";
 
 export interface Card {
+    id: string;
+    set: string;
     number: number;
     name: string;
     rarity: Rarity;
@@ -43,10 +45,12 @@ export async function getSetCards(setID: string): Promise<Card[]> {
     });
 
     const cards = apiCards.map<Card>((apiCard) => ({
+        id: apiCard.id,
+        set: apiCard.set.id,
         number: parseInt(apiCard.number),
         name: apiCard.name,
         rarity: apiCard.rarity as Rarity,
-        image: apiCard.images.large,
+        image: apiCard.images.small,
     })).sort((a, b) => a.number - b.number);
 
     try {
@@ -56,7 +60,10 @@ export async function getSetCards(setID: string): Promise<Card[]> {
             throw error;
         }
     }
-    await Deno.writeTextFile(`./cache/${setID}.json`, JSON.stringify(cards));
+    await Deno.writeTextFile(
+        `./cache/${setID}.json`,
+        JSON.stringify({ version: 1, setID: sets[0].id, cards }),
+    );
 
     return cards;
 }

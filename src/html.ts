@@ -6,14 +6,14 @@ const html = `<!DOCTYPE html>
 <head>
     <style>
         .grid {
-            display: grid;
-            grid-template-columns: repeat(5, minmax(0, 20%));
-            column-gap: 8px;
-            row-gap: 8px;
+            display: flex;
+            flex-flow: wrap;
+            justify-content: center;
         }
 
         .card {
             position: relative;
+            margin: 4px;
         }
 
         .card-image {

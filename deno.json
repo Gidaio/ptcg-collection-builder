@@ -4,6 +4,8 @@
         "lineWidth": 100
     },
     "tasks": {
-        "start": "deno run --allow-read=apikey.txt,cache --allow-write=cache,collection.json,collection.html --allow-net=api.pokemontcg.io src/main.ts"
+        "start": "deno run --allow-read=apikey.txt,cache --allow-write=cache,collection.json,collection.html --allow-net=api.pokemontcg.io src/main.ts",
+        "compile": "deno compile --allow-read=apikey.txt,cache --allow-write=cache,collection.json,collection.html --allow-net=api.pokemontcg.io --output build/pack-builder src/main.ts",
+        "compile-win": "deno compile --target x86_64-pc-windows-msvc --allow-read=apikey.txt,cache --allow-write=cache,collection.json,collection.html --allow-net=api.pokemontcg.io --output build/pack-builder src/main.ts"
     }
 }

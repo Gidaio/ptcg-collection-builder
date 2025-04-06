@@ -37,11 +37,21 @@ for (let i = 0; i < packsToOpen; i += 1) {
 }
 
 const collectionCards = Object.entries(collection)
-    .map<CardWithQuantity>(([number, quantity]) => ({
-        ...cards.find((card) => card.number === parseInt(number))!,
+    .map<CardWithQuantity>(([id, quantity]) => ({
+        ...cards.find((card) => card.id === id)!,
         quantity,
     }))
-    .sort((a, b) => a.number - b.number);
+    .sort(byCollectorNumber);
 
-await Deno.writeTextFile("collection.json", JSON.stringify(collectionCards));
+await Deno.writeTextFile("collection.json", JSON.stringify({ version: 1, collection }));
 await Deno.writeTextFile("collection.html", renderCollectionHTML(collectionCards));
+
+export function byCollectorNumber(a: CardWithQuantity, b: CardWithQuantity): number {
+    if (a.set < b.set) {
+        return -1;
+    } else if (a.set > b.set) {
+        return 1;
+    } else {
+        return a.number - b.number;
+    }
+}
