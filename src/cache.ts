@@ -41,6 +41,7 @@ type Rarity =
 
 export default class Cache {
     #index: Index | null = null;
+    private sets: Record<string, SetCache> = {};
 
     public constructor(private readonly folder: string, private readonly api: PokemonTCG) {}
 
@@ -69,6 +70,10 @@ export default class Cache {
     }
 
     public async getSetCards(setID: string): Promise<Card[]> {
+        if (setID in this.sets) {
+            return this.sets[setID].cards;
+        }
+
         const index = await this.getIndex();
 
         const indexSet = index.sets.find((set) => set.satisfies.includes(setID)) ?? null;
@@ -79,6 +84,7 @@ export default class Cache {
 
             if (setCacheFileContents !== null) {
                 const setCache = JSON.parse(setCacheFileContents) as SetCache;
+                this.sets[setCache.setID] = setCache;
                 return setCache.cards;
             }
 

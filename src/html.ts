@@ -1,4 +1,4 @@
-import { CardWithQuantity } from "./main.ts";
+import { CardWithQuantity } from "./collection.ts";
 
 const html = `<!DOCTYPE html>
 <html>

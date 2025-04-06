@@ -1,10 +1,8 @@
-import Cache, { Card } from "./cache.ts";
-import { addBoosterToCollection, Collection } from "./collection.ts";
+import Cache from "./cache.ts";
+import Collection from "./collection.ts";
 import { renderCollection as renderCollectionHTML } from "./html.ts";
 import PokemonTCG from "./pokemon-tcg.ts";
 import { partitionOn, readTextFileIfExists } from "./util.ts";
-
-export type CardWithQuantity = Card & { quantity: number };
 
 const setToOpen = Deno.args[0];
 if (!setToOpen) {
@@ -22,14 +20,15 @@ if (!Number.isInteger(packsToOpen)) {
     Deno.exit(1);
 }
 
+// Backup stuff in case anything goes wrong!
 const cache = new Cache("cache", new PokemonTCG(await readTextFileIfExists("apikey.txt")));
 const cards = await cache.getSetCards(setToOpen);
 const cardsByRarity = partitionOn(cards, "rarity");
 
-const collection: Collection = {};
+const collection = await Collection.load("collection.json");
 
 for (let i = 0; i < packsToOpen; i += 1) {
-    addBoosterToCollection(cardsByRarity, collection, {
+    collection.addBooster(cardsByRarity, {
         doubleRare: 0.1376,
         ultraRare: 0.0657,
         illustrationRare: 0.0767,
@@ -38,22 +37,9 @@ for (let i = 0; i < packsToOpen; i += 1) {
     });
 }
 
-const collectionCards = Object.entries(collection)
-    .map<CardWithQuantity>(([id, quantity]) => ({
-        ...cards.find((card) => card.id === id)!,
-        quantity,
-    }))
-    .sort(byCollectorNumber);
+await collection.save();
 
-await Deno.writeTextFile("collection.json", JSON.stringify({ version: 1, collection }));
+const collectionCards = await collection.hydrate(cache);
+
+await Deno.copyFile("collection.html", "collection.html.old");
 await Deno.writeTextFile("collection.html", renderCollectionHTML(collectionCards));
-
-export function byCollectorNumber(a: CardWithQuantity, b: CardWithQuantity): number {
-    if (a.set < b.set) {
-        return -1;
-    } else if (a.set > b.set) {
-        return 1;
-    } else {
-        return a.number - b.number;
-    }
-}
