@@ -1,5 +1,8 @@
 {
     "deno.enable": true,
+    "[html]": {
+        "editor.defaultFormatter": "vscode.html-language-features"
+    },
     "[typescript]": {
         "editor.defaultFormatter": "denoland.vscode-deno"
     }
