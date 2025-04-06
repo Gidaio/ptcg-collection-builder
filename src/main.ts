@@ -1,7 +1,8 @@
+import Cache, { Card } from "./cache.ts";
 import { addBoosterToCollection, Collection } from "./collection.ts";
 import { renderCollection as renderCollectionHTML } from "./html.ts";
-import { Card, getSetCards } from "./set-cache.ts";
-import { partitionOn } from "./util.ts";
+import PokemonTCG from "./pokemon-tcg.ts";
+import { partitionOn, readTextFileIfExists } from "./util.ts";
 
 export type CardWithQuantity = Card & { quantity: number };
 
@@ -21,7 +22,8 @@ if (!Number.isInteger(packsToOpen)) {
     Deno.exit(1);
 }
 
-const cards = await getSetCards(setToOpen);
+const cache = new Cache("cache", new PokemonTCG(await readTextFileIfExists("apikey.txt")));
+const cards = await cache.getSetCards(setToOpen);
 const cardsByRarity = partitionOn(cards, "rarity");
 
 const collection: Collection = {};

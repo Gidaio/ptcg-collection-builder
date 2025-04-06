@@ -1,4 +1,4 @@
-import { Card } from "./set-cache.ts";
+import { Card } from "./cache.ts";
 
 export type Collection = Record<Card["id"], number>;
 
