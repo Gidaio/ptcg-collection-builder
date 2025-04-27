@@ -95,6 +95,13 @@ export default class Collection {
     }
 
     public async hydrate(cache: Cache): Promise<CardWithQuantity[]> {
+        // This is just to make sure the cache has all of the sets only once.
+        await Promise.all(
+            [...new Set(Object.keys(this.quantities).map((id) => id.split("-")[0]))].map((setID) =>
+                cache.getSetCards(setID)
+            ),
+        );
+
         return (await Promise.all(
             Object.entries(this.quantities).map<Promise<CardWithQuantity>>(
                 async ([id, quantity]) => {
@@ -107,9 +114,9 @@ export default class Collection {
 }
 
 export function byCollectorNumber(a: CardWithQuantity, b: CardWithQuantity): number {
-    if (a.set < b.set) {
+    if (a.setID < b.setID) {
         return -1;
-    } else if (a.set > b.set) {
+    } else if (a.setID > b.setID) {
         return 1;
     } else {
         return a.number - b.number;

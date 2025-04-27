@@ -5,7 +5,8 @@ import { readTextFileIfExists } from "./util.ts";
 
 export interface Card {
     id: string;
-    set: string;
+    setID: string;
+    setCode: string;
     number: number;
     name: string;
     rarity: Rarity;
@@ -92,6 +93,7 @@ export default class Cache {
             index.sets = index.sets.filter((set) => set !== indexSet);
         }
 
+        console.log(`Fetching set for ${setID}...`);
         const setSearch = await this.api.searchSets({
             query: `id:${setID} OR ptcgoCode:${setID}`,
         });
@@ -109,7 +111,8 @@ export default class Cache {
         const cards = (await this.api.searchCards({ query: `set.id:${apiSet.id}` }))
             .map<Card>((apiCard) => ({
                 id: apiCard.id,
-                set: apiSet.id,
+                setID: apiSet.id,
+                setCode: apiSet.ptcgoCode,
                 number: parseInt(apiCard.number),
                 name: apiCard.name,
                 rarity: apiCard.rarity as Rarity,

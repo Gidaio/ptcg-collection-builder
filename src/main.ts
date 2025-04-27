@@ -2,6 +2,7 @@ import Cache from "./cache.ts";
 import Collection from "./collection.ts";
 import { renderCollection as renderCollectionHTML } from "./html.ts";
 import PokemonTCG from "./pokemon-tcg.ts";
+import { renderCollection } from "./ptcgl.ts";
 import { partitionOn, readTextFileIfExists } from "./util.ts";
 
 const setToOpen = Deno.args[0];
@@ -41,5 +42,20 @@ await collection.save();
 
 const collectionCards = await collection.hydrate(cache);
 
-await Deno.copyFile("collection.html", "collection.html.old");
+try {
+    await Deno.copyFile("collection.html", "collection.html.old");
+} catch (error) {
+    if (!(error instanceof Deno.errors.NotFound)) {
+        throw error;
+    }
+}
 await Deno.writeTextFile("collection.html", renderCollectionHTML(collectionCards));
+
+try {
+    await Deno.copyFile("collection.txt", "collection.txt.old");
+} catch (error) {
+    if (!(error instanceof Deno.errors.NotFound)) {
+        throw error;
+    }
+}
+await Deno.writeTextFile("collection.txt", renderCollection(collectionCards));
