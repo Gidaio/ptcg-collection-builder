@@ -28,6 +28,7 @@ export default class Collection {
             return new Collection(filePath, {});
         }
 
+        // Do a backup!
         await Deno.copyFile(filePath, `${filePath}.old`);
         const savedQuantities = JSON.parse(quantitiesString) as SavedQuantities;
         if (savedQuantities.version > 1) {
