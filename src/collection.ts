@@ -28,8 +28,6 @@ export default class Collection {
             return new Collection(filePath, {});
         }
 
-        // Do a backup!
-        await Deno.copyFile(filePath, `${filePath}.old`);
         const savedQuantities = JSON.parse(quantitiesString) as SavedQuantities;
         if (savedQuantities.version > 1) {
             console.warn("Woah, I'm not equipped to handle more than version 1. I'll try my best.");
@@ -39,6 +37,9 @@ export default class Collection {
     }
 
     public async save(): Promise<void> {
+        // Do a backup!
+        await Deno.copyFile(this.filePath, `${this.filePath}.old`);
+
         await Deno.writeTextFile(
             this.filePath,
             JSON.stringify({ version: 1, collection: this.quantities }),
