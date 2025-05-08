@@ -154,13 +154,27 @@ async function addCommand(input: AddInput): Promise<void> {
     const collection = await Collection.load(collectionFileName);
 
     for (let i = 0; i < input.quantity; i += 1) {
-        collection.addBooster(cardsByRarity, {
-            doubleRare: 0.1376,
-            ultraRare: 0.0657,
-            illustrationRare: 0.0767,
-            specialIllustrationRare: 0.0315,
-            hyperRare: 0.0185,
-        });
+        collection.addBooster(cardsByRarity, [
+            [{ rarities: ["Common"], chance: 1 }],
+            [{ rarities: ["Common"], chance: 1 }],
+            [{ rarities: ["Common"], chance: 1 }],
+            [{ rarities: ["Common"], chance: 1 }],
+            [{ rarities: ["Uncommon"], chance: 1 }],
+            [{ rarities: ["Uncommon"], chance: 1 }],
+            [{ rarities: ["Uncommon"], chance: 1 }],
+            [{ rarities: ["Common", "Uncommon", "Rare"], chance: 1, allowDupes: true }],
+            [
+                { rarities: ["Common", "Uncommon", "Rare"], chance: 0.8733, allowDupes: true },
+                { rarities: ["Illustration Rare"], chance: 0.0767 },
+                { rarities: ["Special Illustration Rare"], chance: 0.0315 },
+                { rarities: ["Hyper Rare"], chance: 0.0185 },
+            ],
+            [
+                { rarities: ["Rare"], chance: 0.7967 },
+                { rarities: ["Double Rare"], chance: 0.1376 },
+                { rarities: ["Ultra Rare"], chance: 0.0657 },
+            ],
+        ]);
     }
 
     await collection.save();

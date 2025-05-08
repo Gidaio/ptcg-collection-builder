@@ -8,12 +8,11 @@ interface SavedQuantities {
     collection: Quantities;
 }
 
-interface Rates {
-    doubleRare: number;
-    illustrationRare: number;
-    ultraRare: number;
-    specialIllustrationRare: number;
-    hyperRare: number;
+type Slot = SlotChance[];
+interface SlotChance {
+    rarities: Card["rarity"][];
+    chance: number;
+    allowDupes?: boolean;
 }
 
 export default class Collection {
@@ -38,7 +37,13 @@ export default class Collection {
 
     public async save(): Promise<void> {
         // Do a backup!
-        await Deno.copyFile(this.filePath, `${this.filePath}.old`);
+        try {
+            await Deno.copyFile(this.filePath, `${this.filePath}.old`);
+        } catch (error) {
+            if (!(error instanceof Deno.errors.NotFound)) {
+                throw error;
+            }
+        }
 
         await Deno.writeTextFile(
             this.filePath,
@@ -48,43 +53,12 @@ export default class Collection {
 
     public addBooster(
         cardsByRarity: Partial<Record<Card["rarity"], Card[]>>,
-        rates: Rates,
+        slots: Slot[],
     ): void {
-        const booster = [
-            ...selectRandomNUniqueFrom(cardsByRarity["Common"] ?? [], 4),
-            ...selectRandomNUniqueFrom(cardsByRarity["Uncommon"] ?? [], 3),
-        ];
+        const booster: Card[] = [];
 
-        let reverseHolos = 1;
-        let secondSlotChance = Math.random();
-
-        if ((secondSlotChance -= rates.illustrationRare) < 0) {
-            booster.push(randomElementFrom(cardsByRarity["Illustration Rare"] ?? []));
-        } else if ((secondSlotChance -= rates.specialIllustrationRare) < 0) {
-            booster.push(randomElementFrom(cardsByRarity["Special Illustration Rare"] ?? []));
-        } else if ((secondSlotChance -= rates.hyperRare) < 0) {
-            booster.push(randomElementFrom(cardsByRarity["Hyper Rare"] ?? []));
-        } else {
-            reverseHolos += 1;
-        }
-
-        booster.push(
-            ...selectRandomNUniqueFrom(
-                (cardsByRarity["Common"] ?? []).concat(cardsByRarity["Uncommon"] ?? []).concat(
-                    cardsByRarity["Rare"] ?? [],
-                ),
-                reverseHolos,
-            ),
-        );
-
-        let rareSlotChance = Math.random();
-
-        if ((rareSlotChance -= rates.doubleRare) < 0) {
-            booster.push(randomElementFrom(cardsByRarity["Double Rare"] ?? []));
-        } else if ((rareSlotChance -= rates.ultraRare) < 0) {
-            booster.push(randomElementFrom(cardsByRarity["Ultra Rare"] ?? []));
-        } else {
-            booster.push(randomElementFrom(cardsByRarity["Rare"] ?? []));
+        for (const slot of slots) {
+            booster.push(chooseCardInSlot(slot, booster));
         }
 
         booster.forEach((card) => {
@@ -94,6 +68,28 @@ export default class Collection {
                 this.quantities[card.id] += 1;
             }
         });
+
+        function chooseCardInSlot(slot: Slot, booster: Card[]): Card {
+            let chance = Math.random();
+            const slotChanceIndex = slot.findIndex((slotChance) => {
+                if (chance < slotChance.chance) {
+                    return true;
+                } else {
+                    chance -= slotChance.chance;
+                    return false;
+                }
+            });
+
+            const slotChance = slot[slotChanceIndex];
+            const options = slotChance.rarities.flatMap((rarity) => cardsByRarity[rarity]!);
+
+            while (true) {
+                const card = randomElementFrom(options);
+                if ((slotChance.allowDupes ?? false) || !booster.includes(card)) {
+                    return card;
+                }
+            }
+        }
     }
 
     public async hydrate(cache: Cache): Promise<CardWithQuantity[]> {
@@ -123,22 +119,6 @@ export function byCollectorNumber(a: CardWithQuantity, b: CardWithQuantity): num
     } else {
         return a.number - b.number;
     }
-}
-
-function selectRandomNUniqueFrom<T>(arr: T[], n: number): T[] {
-    if (arr.length <= n) {
-        return arr;
-    }
-
-    const out: T[] = [];
-    while (out.length < n) {
-        const selected = randomElementFrom(arr);
-        if (!out.includes(selected)) {
-            out.push(selected);
-        }
-    }
-
-    return out;
 }
 
 function randomElementFrom<T>(arr: T[]): T {
