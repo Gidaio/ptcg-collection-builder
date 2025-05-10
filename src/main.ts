@@ -146,6 +146,7 @@ function parseRenderInput(args: string[]): RenderInput {
 async function addCommand(input: AddInput): Promise<void> {
     const cache = new Cache("cache", new PokemonTCG(await readTextFileIfExists("apikey.txt")));
     const cards = await cache.getSetCards(input.set);
+    const boosterSlots = await cache.getSetBooster(input.set);
     const cardsByRarity = partitionOn(cards, "rarity");
 
     const collectionFileName = input.collection.endsWith(".json")
@@ -154,27 +155,7 @@ async function addCommand(input: AddInput): Promise<void> {
     const collection = await Collection.load(collectionFileName);
 
     for (let i = 0; i < input.quantity; i += 1) {
-        collection.addBooster(cardsByRarity, [
-            [{ rarities: ["Common"], chance: 1 }],
-            [{ rarities: ["Common"], chance: 1 }],
-            [{ rarities: ["Common"], chance: 1 }],
-            [{ rarities: ["Common"], chance: 1 }],
-            [{ rarities: ["Uncommon"], chance: 1 }],
-            [{ rarities: ["Uncommon"], chance: 1 }],
-            [{ rarities: ["Uncommon"], chance: 1 }],
-            [{ rarities: ["Common", "Uncommon", "Rare"], chance: 1, allowDupes: true }],
-            [
-                { rarities: ["Common", "Uncommon", "Rare"], chance: 0.8733, allowDupes: true },
-                { rarities: ["Illustration Rare"], chance: 0.0767 },
-                { rarities: ["Special Illustration Rare"], chance: 0.0315 },
-                { rarities: ["Hyper Rare"], chance: 0.0185 },
-            ],
-            [
-                { rarities: ["Rare"], chance: 0.7967 },
-                { rarities: ["Double Rare"], chance: 0.1376 },
-                { rarities: ["Ultra Rare"], chance: 0.0657 },
-            ],
-        ]);
+        collection.addBooster(cardsByRarity, boosterSlots);
     }
 
     await collection.save();

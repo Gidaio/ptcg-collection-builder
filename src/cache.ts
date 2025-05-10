@@ -2,6 +2,7 @@ import { join } from "@std/path/join";
 
 import PokemonTCG from "./pokemon-tcg.ts";
 import { readTextFileIfExists } from "./util.ts";
+import * as v from "./validator.ts";
 
 export interface Card {
     id: string;
@@ -27,7 +28,15 @@ interface IndexSet {
 interface SetCache {
     version: number;
     setID: string;
+    booster: Slot[];
     cards: Card[];
+}
+
+type Slot = SlotChance[];
+interface SlotChance {
+    rarities: Card["rarity"][];
+    chance: number;
+    allowDupes?: boolean;
 }
 
 type Rarity =
@@ -39,6 +48,21 @@ type Rarity =
     | "Illustration Rare"
     | "Special Illustration Rare"
     | "Hyper Rare";
+
+const boosterParser = v.array(v.array(v.type({
+    rarities: v.array(v.enumeration(
+        "Common",
+        "Uncommon",
+        "Rare",
+        "Double Rare",
+        "Ultra Rare",
+        "Illustration Rare",
+        "Special Illustration Rare",
+        "Hyper Rare",
+    )),
+    chance: v.number,
+    allowDupes: v.optional(v.boolean),
+})));
 
 export default class Cache {
     #index: Index | null = null;
@@ -53,9 +77,14 @@ export default class Cache {
 
         const indexString = await readTextFileIfExists(join(this.folder, "index.lock"));
         if (indexString === null) {
-            this.#index = { version: 1, sets: [] };
+            this.#index = { version: 2, sets: [] };
         } else {
             this.#index = JSON.parse(indexString) as Index;
+            if (this.#index.version < 2) {
+                console.log("Cache is old.");
+                Deno.remove(this.folder, { recursive: true });
+                this.#index = { version: 2, sets: [] };
+            }
         }
 
         return this.#index;
@@ -70,11 +99,7 @@ export default class Cache {
         await Deno.writeTextFile(join(this.folder, "index.lock"), JSON.stringify(this.#index));
     }
 
-    public async getSetCards(setID: string): Promise<Card[]> {
-        if (setID in this.sets) {
-            return this.sets[setID].cards;
-        }
-
+    private async fetchSet(setID: string): Promise<void> {
         const index = await this.getIndex();
 
         const indexSet = index.sets.find((set) => set.satisfies.includes(setID)) ?? null;
@@ -85,8 +110,8 @@ export default class Cache {
 
             if (setCacheFileContents !== null) {
                 const setCache = JSON.parse(setCacheFileContents) as SetCache;
-                this.sets[setCache.setID] = setCache;
-                return setCache.cards;
+                this.sets[setID] = setCache;
+                return;
             }
 
             console.warn(`Cache seems corrupt for "${setID}".`);
@@ -119,9 +144,12 @@ export default class Cache {
                 image: apiCard.images.small,
             }));
 
+        const booster = await fetchSetBooster(apiSet.id);
+
         const setCache: SetCache = {
             version: 1,
             setID: apiSet.id,
+            booster,
             cards,
         };
 
@@ -144,6 +172,33 @@ export default class Cache {
             fileName: `${setCache.setID}.json`,
         });
 
-        return cards;
+        this.sets[setID] = setCache;
     }
+
+    public async getSetCards(setID: string): Promise<Card[]> {
+        if (!(setID in this.sets)) {
+            await this.fetchSet(setID);
+        }
+
+        return this.sets[setID].cards;
+    }
+
+    public async getSetBooster(setID: string): Promise<Slot[]> {
+        if (!(setID in this.sets)) {
+            await this.fetchSet(setID);
+        }
+
+        return this.sets[setID].booster;
+    }
+}
+
+async function fetchSetBooster(setID: string): Promise<Slot[]> {
+    console.log(`Fetching booster format for set ${setID}...`);
+    const response = await fetch(`http://tananda.online/ptcg/${setID}.json`);
+
+    if (!response.ok) {
+        throw new Error(`Failed to fetch booster for set ${setID}. ${response.status}`);
+    }
+
+    return boosterParser(await response.json(), []);
 }
