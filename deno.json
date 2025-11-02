@@ -8,7 +8,7 @@
     },
     "tasks": {
         "start": "deno run --allow-read=apikey.txt,cache,collection.json,collection.html,collection.txt --allow-write=cache,collection.json,collection.json.old,collection.html,collection.html.old,collection.txt,collection.txt.old --allow-net=api.pokemontcg.io,tananda.online src/main.ts",
-        "compile": "deno compile --allow-all --output build/pack-builder src/main.ts",
-        "compile-win": "deno compile --target x86_64-pc-windows-msvc --allow-all --output build/pack-builder src/main.ts"
+        "compile": "deno compile --allow-all --output build/collection-builder src/main.ts",
+        "compile-win": "deno compile --target x86_64-pc-windows-msvc --allow-all --output build/collection-builder src/main.ts"
     }
 }

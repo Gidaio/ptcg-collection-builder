@@ -45,6 +45,9 @@ type Rarity =
     | "Rare"
     | "Double Rare"
     | "Ultra Rare"
+    | "ACE SPEC Rare"
+    | "Shiny Rare"
+    | "Shiny Ultra Rare"
     | "Illustration Rare"
     | "Special Illustration Rare"
     | "Hyper Rare";
@@ -56,6 +59,9 @@ const boosterParser = v.array(v.array(v.type({
         "Rare",
         "Double Rare",
         "Ultra Rare",
+        "ACE SPEC Rare",
+        "Shiny Rare",
+        "Shiny Ultra Rare",
         "Illustration Rare",
         "Special Illustration Rare",
         "Hyper Rare",
